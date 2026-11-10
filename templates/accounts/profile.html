@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/custom.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script>
+      function showModal(id) {
+        document.getElementById(id).style.display = "flex";
+      }
+      function hideModal(id) {
+        document.getElementById(id).style.display = "none";
+      }
+    </script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <i class="fa fa-camera-retro me-2"></i> InstaClone
+        </a>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="/social/feed/">Feed</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/social/suggestions/">Suggestions</a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link active"
+                href="/accounts/profile/{{ user.username }}/"
+                >Profile</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/posts/saved/">Saved</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/accounts/logout/">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container mt-5">
+      <div class="row align-items-center mb-4">
+        <div class="col-md-2 text-center">
+          <span class="avatar-gradient">
+            <img
+              src="{{ profile.profile_pic.url }}"
+              class="rounded-circle mb-3"
+              width="120"
+              height="120"
+              alt="Profile Picture"
+            />
+          </span>
+        </div>
+        <div class="col-md-6">
+          <h2 class="fw-bold">{{ profile.user.username }}</h2>
+          <div
+            class="profile-follow-box d-flex justify-content-center align-items-center"
+          >
+            <span
+              class="profile-follow-link"
+              onclick="showModal('followersModal')"
+              >Followers: {{ profile.user.followers.count }}</span
+            >
+            <span
+              class="profile-follow-link"
+              onclick="showModal('followingModal')"
+              >Following: {{ profile.user.following.count }}</span
+            >
+          </div>
+          <p><strong>Bio:</strong> {{ profile.bio }}</p>
+          {% if user.username != profile.user.username %}
+          <form
+            method="post"
+            action="/accounts/profile/{{ profile.user.username }}/follow/"
+          >
+            {% csrf_token %} {% if is_following %}
+            <button type="submit" class="btn">Unfollow</button>
+            {% else %}
+            <button type="submit" class="btn">Follow</button>
+            {% endif %}
+          </form>
+          {% endif %}
+        </div>
+        {% if user.username == profile.user.username %}
+        <div class="col-md-4 text-end">
+          <a href="/posts/create/" class="btn"
+            ><i class="fa fa-plus me-1"></i> Create Post</a
+          >
+        </div>
+        {% endif %}
+      </div>
+      <h4 class="fw-bold mb-3">Posts</h4>
+      <div class="profile-grid">
+        {% for post in posts %}
+        <div>
+          <div class="card shadow-sm">
+            <img
+              src="{{ post.image.url }}"
+              class="profile-post-img"
+              alt="Post Image"
+            />
+            <div class="card-body p-2">
+              <p class="card-text small">{{ post.caption }}</p>
+              {% if user.id == post.user.id %}
+              <a href="/posts/edit/{{ post.id }}/" class="btn btn-sm"
+                ><i class="fa fa-edit"></i
+              ></a>
+              <a href="/posts/delete/{{ post.id }}/" class="btn btn-sm"
+                ><i class="fa fa-trash"></i
+              ></a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <p>No posts yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Followers Modal -->
+    <div class="modal-bg" id="followersModal" style="display: none">
+      <div class="modal-content-box">
+        <h5>Followers</h5>
+        <ul class="list-group">
+          {% for f in profile.user.followers.all %}
+          <li class="list-group-item">
+            <a
+              href="/accounts/profile/{{ f.follower.username }}/"
+              class="text-decoration-none text-white"
+              >{{ f.follower.username }}</a
+            >
+          </li>
+          {% empty %}
+          <li class="list-group-item">No followers yet.</li>
+          {% endfor %}
+        </ul>
+        <button class="btn mt-3" onclick="hideModal('followersModal')">
+          Close
+        </button>
+      </div>
+    </div>
+    <!-- Following Modal -->
+    <div class="modal-bg" id="followingModal" style="display: none">
+      <div class="modal-content-box">
+        <h5>Following</h5>
+        <ul class="list-group">
+          {% for f in profile.user.following.all %}
+          <li class="list-group-item">
+            <a
+              href="/accounts/profile/{{ f.following.username }}/"
+              class="text-decoration-none text-white"
+              >{{ f.following.username }}</a
+            >
+          </li>
+          {% empty %}
+          <li class="list-group-item">Not following anyone yet.</li>
+          {% endfor %}
+        </ul>
+        <button class="btn mt-3" onclick="hideModal('followingModal')">
+          Close
+        </button>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feed | InstaClone</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/custom.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <i class="fa fa-camera-retro me-2"></i> InstaClone
+        </a>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            {% if user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/social/feed/">Feed</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/social/suggestions/">Suggestions</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/accounts/profile/{{ user.username }}/"
+                >Profile</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/posts/saved/">Saved</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/accounts/logout/">Logout</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="/accounts/login/">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/accounts/register/">Register</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container mt-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Your Feed</h2>
+        <a href="/posts/create/" class="create-post-btn"
+          ><i class="fa fa-plus"></i> Create Post</a
+        >
+      </div>
+      {% if posts %} {% for post in posts %}
+      <div class="card mb-5 shadow-sm post-card">
+        <div
+          class="card-header d-flex justify-content-between align-items-center bg-white border-0"
+        >
+          <div>
+            <img
+              src="{{ post.user.profile.profile_pic.url }}"
+              class="rounded-circle me-2"
+              width="40"
+              height="40"
+            />
+            <span class="post-header-username">{{ post.user.username }}</span>
+            <span class="text-muted small ms-2">
+              {{ post.created_at|date:"M d, Y h:i A" }}
+            </span>
+          </div>
+          {% if user.id == post.user.id %}
+          <div>
+            <a href="/posts/edit/{{ post.id }}/" class="btn btn-sm"
+              ><i class="fa fa-edit"></i
+            ></a>
+            <a href="/posts/delete/{{ post.id }}/" class="btn btn-sm"
+              ><i class="fa fa-trash"></i
+            ></a>
+          </div>
+          {% endif %}
+        </div>
+        <img src="{{ post.image.url }}" class="card-img-top" alt="Post Image" />
+        <div class="card-body">
+          <div class="action-row">
+            <div class="d-flex align-items-center">
+              <form method="post" action="/posts/like/" style="display: inline">
+                {% csrf_token %}
+                <input type="hidden" name="post_id" value="{{ post.id }}" />
+                <button
+                  type="submit"
+                  class="like-btn {% if post.id in liked_post_ids %}liked{% endif %}"
+                  aria-label="Like"
+                >
+                  <i
+                    class="fa{% if post.id in liked_post_ids %}s{% else %}r{% endif %} fa-heart"
+                  ></i>
+                </button>
+              </form>
+              <span class="like-count">{{ post.like_set.count }} likes</span>
+            </div>
+            <form method="post" action="/posts/save/" style="display: inline">
+              {% csrf_token %}
+              <input type="hidden" name="post_id" value="{{ post.id }}" />
+              <button
+                type="submit"
+                class="save-btn{% if post.id in saved_post_ids %} saved{% endif %}"
+                aria-label="Save"
+              >
+                <i
+                  class="fa{% if post.id in saved_post_ids %}s{% else %}r{% endif %} fa-bookmark"
+                ></i>
+              </button>
+            </form>
+          </div>
+          <p
+            class="card-text"
+            style="color: #fff; font-size: 14px; font-weight: 400"
+          >
+            {{ post.caption }}
+          </p>
+          <div class="comments-scroll" id="comments-{{ post.id }}">
+            {% for comment in comments %} {% if comment.post_id == post.id %}
+            <div class="comment-box">
+              <div>
+                <span class="comment-username"
+                  >{{ comment.user.username }}</span
+                >
+                <span class="comment-text">{{ comment.text }}</span>
+                <span class="comment-timestamp"
+                  >{{ comment.created_at|date:"M d, Y h:i A" }}</span
+                >
+              </div>
+              {% if comment.user.id == user.id %}
+              <form
+                method="post"
+                action="/posts/comment/delete/"
+                class="delete-comment-form"
+              >
+                {% csrf_token %}
+                <input
+                  type="hidden"
+                  name="comment_id"
+                  value="{{ comment.id }}"
+                />
+                <button type="submit" class="btn-delete-comment" title="Delete">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+            {% endif %} {% endfor %}
+          </div>
+          <form
+            method="post"
+            action="/posts/comment/"
+            class="mt-2 d-flex align-items-center comment-form"
+            data-post-id="{{ post.id }}"
+          >
+            {% csrf_token %}
+            <input type="hidden" name="post_id" value="{{ post.id }}" />
+            <input
+              type="text"
+              name="text"
+              class="comment-form-input"
+              placeholder="Add a comment..."
+            />
+            <button type="submit" class="comment-post-btn">Post</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %} {% else %}
+      <p>No posts to show. Follow users or create a post!</p>
+      {% endif %}
+    </div>
+    <script src="/static/instaclone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
