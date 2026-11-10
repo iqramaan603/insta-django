@@ -33,7 +33,7 @@ A full-stack Instagram-style social media web app built with **Django**. Users c
 ## Run Locally (Windows)
 
 ```bat
-git clone https://github.com/YOUR-USERNAME/insta-django.git
+git clone https://github.com/iqramaan603/insta-django.git
 cd insta-django
 py -m venv venv
 venv\Scripts\activate
