@@ -57,4 +57,6 @@ static/     CSS and JavaScript
 
 ## Author
 
-**YOUR NAME** | [LinkedIn](https://www.linkedin.com/in/YOUR-LINK)
+www.linkedin.com/in/iqra-maan-7a5a01419
+
+)
